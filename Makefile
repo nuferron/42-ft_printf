@@ -48,6 +48,10 @@ do_bonus: ${OBJS_BONUS} ${HEADER_LIBFT}
 	cp libft/libft.a $(NAME)
 	ar crs ${NAME} ${OBJS_BONUS}
 	touch do_bonus
+norm:
+	make -C inc/ft_printf norm --no-print-directory
+	norminette ${SRCS} ${SRCS_BNS} | grep -v "OK" | awk '{if($$2 == "Error!") \
+	print "${PURPLE}"$$1" "$$2; else print "${DEFAULT}"$$0}'
 
 clean:
 	@rm -f ${OBJS} $ ${OBJS_BONUS}
