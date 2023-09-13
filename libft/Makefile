@@ -6,9 +6,18 @@
 #    By: nuferron <nuferron@student.42barcel>       +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2023/01/10 18:05:14 by nuferron          #+#    #+#              #
-#    Updated: 2023/05/05 21:41:15 by nuferron         ###   ########.fr        #
+#    Updated: 2023/09/13 22:05:33 by nuferron         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
+
+RED = \033[1;31m
+GREEN = \033[1;32m
+YELLOW = \033[1;33m
+BLUE = \033[1;34m
+PURPLE = \033[1;35m
+CYAN = \033[1;36m
+WHITE = \033[1;37m
+RESET = \033[0m
 
 SRCS = ft_isalpha.c ft_isdigit.c ft_isalnum.c ft_isascii.c ft_isprint.c \
        ft_strlen.c ft_memset.c ft_bzero.c ft_memcpy.c ft_memmove.c \
@@ -16,48 +25,53 @@ SRCS = ft_isalpha.c ft_isdigit.c ft_isalnum.c ft_isascii.c ft_isprint.c \
 	   ft_strrchr.c ft_strncmp.c ft_memchr.c ft_memcmp.c ft_strnstr.c \
 	   ft_atoi.c ft_calloc.c ft_strdup.c ft_substr.c ft_strjoin.c ft_strtrim.c \
 	   ft_split.c ft_itoa.c ft_strmapi.c ft_striteri.c ft_putchar_fd.c \
-	   ft_putstr_fd.c ft_putendl_fd.c ft_putnbr_fd.c \
+	   ft_putstr_fd.c ft_putendl_fd.c ft_putnbr_fd.c
 
 SRCSBONUS = ft_lstnew_bonus.c ft_lstadd_front_bonus.c ft_lstsize_bonus.c \
 			ft_lstlast_bonus.c ft_lstadd_back_bonus.c ft_lstdelone_bonus.c \
-			ft_lstclear_bonus.c ft_lstiter_bonus.c ft_lstmap_bonus.c \
+			ft_lstclear_bonus.c ft_lstiter_bonus.c ft_lstmap_bonus.c
 
-#aqui passem els srcs a objs canviant l'extensio de .c a .o
-OBJS = ${SRCS:.c=.o}
+OBJS = $(addprefix $(OBJDIR),$(SRCS:.c=.o))
+OBJSBONUS = $(addprefix $(OBJDIR),$(SRCSBONUS:.c=.o))
 
-
+OBJDIR = obj/
+SRCDIR = src/
 HEADER = libft.h
 NAME = libft.a
-CC = cc
-RM = rm -f
+RM = rm -rf
 CFLAGS = -Wall -Wextra -Werror
-OBJSBONUS = ${SRCSBONUS:.c=.o}
-
-
-#quan fem una conversio de .c a .o, aqui mirem si el header ha estat modificat
-%.o: %.c $(HEADER)
-	${CC} ${CFLAGS} -I libft.h -c $< -o ${<:.c=.o}
-
+COLUMNS = $(shell tput cols)
 
 all: 		${NAME}
 
-#primer mirem si els OBJS son mes nous que el NAME; si ho son, s'executa el comando que hi ha a sota i, si no, no s'executa res.
-${NAME}:	${OBJS} 
+${NAME}:	${OBJS}
 		ar rcs ${NAME} ${OBJS}
-		ranlib ${NAME}
+		printf "${WHITE}LIBFT: ${GREEN}Library compiled!${RESET}\n"
 
-bonus:		${OBJS} ${OBJSBONUS} $(HEADER)
-			ar rcs ${NAME} ${OBJS} ${OBJSBONUS}
-			ranlib ${NAME}
-			@touch $@
+bonus:	do_bonus
+
+do_bonus:	${OBJS} ${OBJSBONUS}
+		ar rcs ${NAME} ${OBJS} ${OBJSBONUS}
+		printf "${WHITE}LIBFT: ${GREEN}Bonus compiled!${RESET}\n"
+		touch do_bonus
+
+$(OBJDIR)%.o:	${SRCDIR}%.c $(HEADER) | ${OBJDIR}
+		@printf "${WHITE}LIBFT:${CYAN}Compiling files: ${WHITE}$(notdir $<)...${RESET}\r"
+		@cc $(CFLAGS) -I $(HEADER) -c $< -o $@
+		@printf "\r%-${COLUMNS}s\r" ""
+
+${OBJDIR}:
+		mkdir -p $(dir $@)
+
 clean: 		
-		${RM} ${OBJS} ${OBJSBONUS} 
+		${RM} ${OBJDIR}
+		printf "${WHITE}LIBFT: ${RED}Objects have been deleted${RESET}\n"
 
 fclean: 	clean
-		${RM} ${NAME}
-		${RM} bonus
+		${RM} ${NAME} do_bonus
+		printf "${WHITE}LIBFT: ${RED}Static library has been deleted${RESET}\n"
 
 re:		fclean all
 
-#li especifiquem el nom de les normes que no volem que confongui amb arxius que puguin tenir el mateix nom.
-.PHONY: all clean fclean re
+.SILENT: fclean clean ${NAME} do_bonus ${OBJDIR}
+.PHONY: all clean fclean re bonus
