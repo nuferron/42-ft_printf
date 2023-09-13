@@ -6,9 +6,18 @@
 #    By: nuferron <nuferron@student.42barcelona.co  +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2023/05/14 00:01:43 by nuferron          #+#    #+#              #
-#    Updated: 2023/05/14 17:26:24 by nuferron         ###   ########.fr        #
+#    Updated: 2023/09/13 22:30:25 by nuferron         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
+
+RED = \033[1;31m
+GREEN = \033[1;32m
+YELLOW = \033[1;33m
+BLUE = \033[1;34m
+PURPLE = \033[1;35m
+CYAN = \033[1;36m
+WHITE = \033[1;37m
+RESET = \033[0m
 
 SRCS =	ft_printf.c printf_char.c printf_string.c printf_num.c \
 		printf_unsigned_num.c printf_pointers.c printf_hex_cap.c \
@@ -22,48 +31,65 @@ SRCS_BONUS =	ft_printf_bonus.c printf_char_bonus.c printf_string_bonus.c \
 				pf_bonus_sign.c len_functions.c \
 
 
-OBJS = ${SRCS:.c=.o}
-OBJS_BONUS = ${SRCS_BONUS:.c=.o}
+OBJS = $(addprefix $(OBJDIR),$(SRCS:.c=.o))
+OBJS_BONUS = $(addprefix $(OBJDIR_BONUS),$(SRCS_BONUS:.c=.o))
 
-
+OBJDIR = obj/
+OBJDIR_BONUS = obj_bonus/
+SRCDIR = src/
+SRCDIR_BONUS = src_bonus/
 NAME = libftprintf.a
 HEADER = libftprintf.h
 HEADER_LIBFT = libft/libft.h
 CFLAGS = -Wall -Wextra -Werror
+COLUMNS = $(shell tput cols)
 
-%.o: %.c ${HEADER}
-	cc ${CFLAGS} -c $< -o ${<:.c=.o}
-all: make_libs ${NAME}
+all:		${NAME} make_libs
 
-bonus: make_libs do_bonus
+${NAME}:	${OBJS}
+		ar rcs ${NAME} ${OBJS}
+		printf "${WHITE}FT_PRINTF: ${GREEN}Library compiled!${RESET}\n"
+
+bonus:		make_libs do_bonus
+
+do_bonus:	${OBJS_BONUS}
+		rm -rf obj/ ${NAME}
+		cp libft/libft.a ${NAME}
+		ar rcs ${NAME} ${OBJS_BONUS}
+		printf "${WHITE}FT_PRINTF: ${GREEN}Bonus compiled!${RESET}\n"
+		touch do_bonus
 
 make_libs:
-	MAKE -C libft/
+		make -C libft bonus --no-print-directory
 
-${NAME}: ${OBJS}
-	cp libft/libft.a $(NAME)
-	ar crs ${NAME} ${OBJS}
+${OBJDIR}%.o:	${SRCDIR}%.c ${HEADER} | ${OBJDIR}
+		@printf "${WHITE}FT_PRINTF:${CYAN}Compiling files: ${WHITE}$(notdir $<)...${RESET}\r"
+		@cc $(CFLAGS) -I $(HEADER) -c $< -o $@
+		@printf "\r%-${COLUMNS}s\r" ""
 
-do_bonus: ${OBJS_BONUS} ${HEADER_LIBFT}
-	cp libft/libft.a $(NAME)
-	ar crs ${NAME} ${OBJS_BONUS}
-	touch do_bonus
-norm:
-	make -C inc/ft_printf norm --no-print-directory
-	norminette ${SRCS} ${SRCS_BNS} | grep -v "OK" | awk '{if($$2 == "Error!") \
-	print "${PURPLE}"$$1" "$$2; else print "${DEFAULT}"$$0}'
+${OBJDIR}:
+		mkdir -p $(dir $@)
+
+${OBJDIR_BONUS}%.o:	${SRCDIR_BONUS}%.c ${HEADER} | ${OBJDIR_BONUS}
+		@printf "${WHITE}FT_PRINTF:${CYAN}Compiling files: ${WHITE}$(notdir $<)...${RESET}\r"
+		@cc $(CFLAGS) -I $(HEADER) -c $< -o $@
+		@printf "\r%-${COLUMNS}s\r" ""
+
+${OBJDIR_BONUS}:
+		mkdir -p $(dir $@)
 
 clean:
-	@rm -f ${OBJS} $ ${OBJS_BONUS}
-	MAKE -C libft clean
+	rm -rf ${OBJDIR} ${OBJDIR_BONUS}
+	printf "${WHITE}FT_PRINTF: ${RED}Objects have been deleted${RESET}\n"
 
 fclean:	clean
-	@rm -f ${NAME}
-	rm -f bonus do_bonus
-	MAKE -C libft fclean
+	rm -f ${NAME} do_bonus
+	make -C libft fclean --no-print-directory
+	printf "${WHITE}FT_PRINTF: ${RED}Static library has been deleted${RESET}\n"
 
 re:	fclean all
 
 re_bonus: fclean bonus
 
-.PHONY: all clean fclean re bonus re_bonus
+.SILENT: ${NAME} ${OBJDIR} clean fclean ${OBJDIR_BONUS} do_bonus make_libs
+.PHONY: all clean fclean re re_bonus bonus
