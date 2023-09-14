@@ -6,7 +6,7 @@
 #    By: nuferron <nuferron@student.42barcel>       +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2023/01/10 18:05:14 by nuferron          #+#    #+#              #
-#    Updated: 2023/09/13 22:05:33 by nuferron         ###   ########.fr        #
+#    Updated: 2023/09/14 15:52:23 by nuferron         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -38,7 +38,6 @@ OBJDIR = obj/
 SRCDIR = src/
 HEADER = libft.h
 NAME = libft.a
-RM = rm -rf
 CFLAGS = -Wall -Wextra -Werror
 COLUMNS = $(shell tput cols)
 
@@ -55,6 +54,12 @@ do_bonus:	${OBJS} ${OBJSBONUS}
 		printf "${WHITE}LIBFT: ${GREEN}Bonus compiled!${RESET}\n"
 		touch do_bonus
 
+norm:
+	printf "${WHITE}LIBFT${RESET}\n"
+	norminette $(addprefix ${SRCDIR},$(SRCS)) $(addprefix ${SRCDIR_BNS},$(SRCS_BNS)) ${HEADER} | grep -v "OK" \
+	| awk '{if($$2 == "Error!") print "${RED}"$$1" "$$2; \
+	else print "${RESET}"$$0}'
+
 $(OBJDIR)%.o:	${SRCDIR}%.c $(HEADER) | ${OBJDIR}
 		@printf "${WHITE}LIBFT:${CYAN}Compiling files: ${WHITE}$(notdir $<)...${RESET}\r"
 		@cc $(CFLAGS) -I $(HEADER) -c $< -o $@
@@ -63,15 +68,20 @@ $(OBJDIR)%.o:	${SRCDIR}%.c $(HEADER) | ${OBJDIR}
 ${OBJDIR}:
 		mkdir -p $(dir $@)
 
-clean: 		
-		${RM} ${OBJDIR}
-		printf "${WHITE}LIBFT: ${RED}Objects have been deleted${RESET}\n"
+clean:
+		if [ -d ${OBJDIR} ] ; then \
+			rm -rf ${OBJDIR} ; \
+			printf "${WHITE}LIBFT: ${RED}Objects have been deleted${RESET}\n" ; \
+		fi
 
 fclean: 	clean
-		${RM} ${NAME} do_bonus
-		printf "${WHITE}LIBFT: ${RED}Static library has been deleted${RESET}\n"
+		if [ -e ${NAME} ] || [ -e do_bonus ] ; then \
+			rm -rf ${NAME} do_bonus ; \
+			printf "${WHITE}LIBFT: ${RED}Static library has been deleted${RESET}\n" ; \
+		else printf "${WHITE}LIBFT: ${PURPLE}Already cleaned${RESET}\n" ; \
+		fi
 
 re:		fclean all
 
-.SILENT: fclean clean ${NAME} do_bonus ${OBJDIR}
+.SILENT: fclean clean ${NAME} do_bonus ${OBJDIR} norm
 .PHONY: all clean fclean re bonus
